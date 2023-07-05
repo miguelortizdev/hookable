@@ -50,6 +50,17 @@ class Builder extends EloquentBuilder
      */
     public function callParent($method, array $args)
     {
+        // En versiones anteriores de Laravel, en la clase Illuminate\Database\Query\Builder,
+        // en el metodo "whereNull" el primer parametro se llamaba "$column". En versiones recientes de
+        // Laravel, el nombre de este parametro fue cambiado a "$columns". Este cambio en el nombre de parametro
+        // afecta el llamado que se hace en el metodo "forwardCallTo" de la clase
+        // Illuminate\Support\Traits\ForwardsCalls:
+        // return $object->{$method}(...$parameters);
+        // en donde tienen que coincidir el nombre de los parametros con los keys del array asociativo $parameters
+        if ($method == 'whereNull' and array_key_exists('column', $args)) {
+            $args['columns'] = $args['column'];
+            unset($args['column']);
+        }
         // @deprecated
         // return call_user_func_array("parent::{$method}", $args);
         return call_user_func_array(['parent', $method], $args);
